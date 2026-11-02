@@ -1,0 +1,38 @@
+<section class="card calendar-card">
+  <h2>Календарь активности</h2>
+  <p class="muted">
+    Последние 12 недель: {{ weeks[0].days[0].date|ru_date }} — {{ weeks[-1].days[6].date|ru_date }}.
+    Чем больше заданий за день, тем ярче клетка.
+  </p>
+  <div class="calendar">
+    <div class="calendar-weekdays" aria-hidden="true">
+      <span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+    </div>
+    <div class="calendar-weeks">
+      {% for week in weeks %}
+        <div class="calendar-week">
+          {% for day in week.days %}
+            <span class="cal-day level-{{ day.level }} {{ 'is-today' if day.today else '' }} {{ 'is-future' if day.future else '' }}"
+                  title="{{ day.iso|ru_date }}: {{ day.count }} заданий, {{ day.xp }} XP">
+              <span class="sr-only">{{ day.iso|ru_date }}</span>
+            </span>
+          {% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+  <div class="calendar-legend">
+    <span class="muted">Меньше</span>
+    <span class="cal-day level-0"></span>
+    <span class="cal-day level-1"></span>
+    <span class="cal-day level-2"></span>
+    <span class="cal-day level-3"></span>
+    <span class="cal-day level-4"></span>
+    <span class="muted">Больше</span>
+  </div>
+  <div class="mini-stats">
+    <div><span class="mini-label">Дней с занятиями</span><strong>{{ stats.days_active }}</strong></div>
+    <div><span class="mini-label">Завершено занятий</span><strong>{{ stats.lessons_completed }}</strong></div>
+    <div><span class="mini-label">В повторении</span><strong>{{ stats.review_count }}</strong></div>
+  </div>
+</section>

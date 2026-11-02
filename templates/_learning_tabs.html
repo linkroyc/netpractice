@@ -1,0 +1,8 @@
+<nav class="learning-switcher" aria-label="Разделы обучения">
+  <a class="btn btn-secondary {{ 'active' if active_learning_tab == 'curriculum' else '' }}"
+     href="{{ url_for('learn') }}"
+     {% if active_learning_tab == 'curriculum' %}aria-current="page"{% endif %}>Программа</a>
+  <a class="btn btn-secondary {{ 'active' if active_learning_tab == 'modules' else '' }}"
+     href="{{ url_for('library') }}"
+     {% if active_learning_tab == 'modules' %}aria-current="page"{% endif %}>Мои модули</a>
+</nav>

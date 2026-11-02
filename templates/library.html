@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% block title %}Библиотека модулей — NetPractice{% endblock %}
+{% block content %}
+
+{% set active_learning_tab = 'modules' %}
+{% include "_learning_tabs.html" %}
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Учебные пакеты</p>
+    <h1>Библиотека</h1>
+    <p class="lead">
+      Системные курсы NetPractice и пользовательские модули в формате
+      <code>.nptpack</code>. Пакеты содержат только данные и проверяются
+      перед установкой.
+    </p>
+  </div>
+</div>
+
+<div class="grid-2">
+  <section class="card" id="import">
+    <div class="card-heading">
+      <h2>Импортировать модуль</h2>
+      <span class="badge">.nptpack</span>
+    </div>
+    <form method="post" action="{{ url_for('library_import_preview') }}"
+          enctype="multipart/form-data" data-start-form>
+      <label class="field">
+        <span>Файл учебного пакета</span>
+        <input type="file" name="file" accept=".nptpack,application/zip" required>
+      </label>
+      <button class="btn btn-block" type="submit">Проверить пакет</button>
+    </form>
+    <p class="hint">
+      Сначала показывается предпросмотр. База данных изменится только после
+      подтверждения. Максимум 5 МБ, только изображения PNG/JPEG.
+    </p>
+  </section>
+
+  <section class="card">
+    <div class="card-heading">
+      <h2>Системные модули</h2>
+      <span class="badge">{{ system_modules|length }}</span>
+    </div>
+    <p class="muted">Встроенная программа NetPractice. Эти модули нельзя удалить.</p>
+    <ul class="system-module-list">
+      {% for module in system_modules %}
+        <li>
+          <a href="{{ url_for('module_detail', module_id=module.id) }}">
+            {{ module.id }}. {{ module.title }}
+          </a>
+          <span class="muted">{{ module.total }} заданий · встроенный</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+</div>
+
+<section class="library-section">
+  <div class="card-heading library-heading">
+    <div>
+      <h2>Пользовательские модули</h2>
+      <p class="muted">Установленные пакеты доступны для практики и повторения.</p>
+    </div>
+    <span class="badge">{{ custom_modules|length }}</span>
+  </div>
+
+  {% if custom_modules %}
+    <div class="library-grid">
+      {% for module in custom_modules %}
+        <article class="card library-card">
+          <div class="library-card-head">
+            <div>
+              <h3>{{ module.title }}</h3>
+              <p class="muted">{{ module.description }}</p>
+            </div>
+            <span class="badge badge-success">Установлен</span>
+          </div>
+          <div class="pack-meta">
+            <span>{{ module.author }}</span>
+            <span>v{{ module.module_version }}</span>
+            <span>{{ PACK_DIFFICULTY_LABELS.get(module.difficulty, module.difficulty) }}</span>
+            <span>{{ module.category }}</span>
+          </div>
+          <div class="mini-stats">
+            <div><span class="mini-label">Заданий</span><strong>{{ module.question_count }}</strong></div>
+            <div><span class="mini-label">Лабораторных</span><strong>{{ module.lab_count }}</strong></div>
+            <div><span class="mini-label">Верно</span><strong>{{ module.progress.correct }} / {{ module.progress.total }}</strong></div>
+          </div>
+          <div class="progress-row">
+            <span>Прогресс</span>
+            <span>{{ module.progress.percent }}%</span>
+          </div>
+          <progress value="{{ module.progress.correct }}" max="{{ module.progress.total }}">{{ module.progress.percent }}%</progress>
+          <div class="module-actions">
+            <a class="btn" href="{{ url_for('library_pack', pack_id=module.pack_id) }}">Открыть</a>
+            <form method="post" action="{{ url_for('library_start', pack_id=module.pack_id) }}" data-start-form>
+              <button class="btn btn-secondary" type="submit">Начать обучение</button>
+            </form>
+            <a class="btn btn-ghost" href="{{ url_for('library_export', pack_id=module.pack_id) }}">Экспорт</a>
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card empty-state">
+      <h2>Пользовательских модулей пока нет</h2>
+      <p class="lead">Импортируйте файл <code>.nptpack</code> — он появится здесь и станет доступен для обучения.</p>
+    </div>
+  {% endif %}
+</section>
+
+{% endblock %}

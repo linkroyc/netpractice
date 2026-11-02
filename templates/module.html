@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Модуль {{ module.id }}. {{ module.title }} — NetPractice{% endblock %}
+{% block content %}
+
+<p class="breadcrumb"><a href="{{ url_for('learn') }}">← Все модули</a></p>
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Модуль {{ module.id }}</p>
+    <h1>{{ module.title }}</h1>
+    <p class="lead">{{ module.subtitle }}</p>
+    <p class="muted">{{ module.goal }}</p>
+  </div>
+</div>
+
+{% if not progress.unlocked %}
+  <section class="card lock-card">
+    <h2>Модуль пока закрыт</h2>
+    <p>
+      Чтобы открыть его, попробуйте не менее
+      {{ progress.unlock_required }} заданий модуля
+      «{{ progress.unlock_from }}». Сейчас пройдено {{ progress.unlock_done }}.
+    </p>
+    <p class="muted">
+      Это не наказание, а защита от слишком сложного материала: сначала
+      полезно познакомиться с базовыми понятиями.
+    </p>
+    <a class="btn btn-secondary" href="{{ url_for('learn') }}">Вернуться к списку</a>
+  </section>
+{% else %}
+
+  <div class="grid-4">
+    <div class="stat-card">
+      <span class="stat-label">Заданий в модуле</span>
+      <strong>{{ progress.total }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Попробовано</span>
+      <strong>{{ progress.attempted }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Решено верно</span>
+      <strong>{{ progress.correct }}</strong>
+    </div>
+    <div class="stat-card">
+      <span class="stat-label">Прогресс</span>
+      <strong>{{ progress.percent_correct }}%</strong>
+    </div>
+  </div>
+
+  <section class="card">
+    <h2>Краткая теория</h2>
+    <ul class="theory-list">
+      {% for item in module.theory %}
+        <li>{{ item }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-heading">
+      <h2>Практика модуля</h2>
+      <form method="post" action="{{ url_for('practice_start', module_id=module.id) }}" data-start-form>
+        <button class="btn" type="submit">Тренировка: {{ 6 if progress.total > 6 else progress.total }} заданий</button>
+      </form>
+    </div>
+    <p class="muted">
+      Тренировка берёт задания из этого модуля: сначала новые, затем те,
+      где были ошибки. Попытка не отнимает XP и ничего не блокирует.
+    </p>
+
+    <ul class="task-list">
+      {% for question in questions %}
+        <li class="task-row">
+          <div class="task-main">
+            <div class="task-meta">
+              <span class="badge">{{ TYPE_LABELS[question.type] }}</span>
+              <span class="difficulty difficulty-{{ question.difficulty }}">{{ DIFFICULTY_LABELS[question.difficulty] }}</span>
+            </div>
+            <strong>{{ question.topic }}</strong>
+            <p class="muted">{{ question.prompt|truncate(130, true, '…') }}</p>
+          </div>
+          <div class="task-state">
+            {% if question.ever_correct %}
+              <span class="status status-done">Решено</span>
+            {% elif question.attempted %}
+              <span class="status status-tried">Была ошибка</span>
+            {% else %}
+              <span class="status">Не начато</span>
+            {% endif %}
+            <span class="xp-note">+{{ question.xp }} XP</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}
+
+{% endblock %}

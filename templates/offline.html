@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Нет подключения — NetPractice{% endblock %}
+{% block content %}
+
+<section class="card empty-state">
+  <p class="eyebrow">Офлайн</p>
+  <h1>Локальный сервер недоступен</h1>
+  <p class="lead">
+    Интерфейс загружен из кэша, но данные и задания хранятся на локальном сервере
+    NetPractice. Запустите приложение на компьютере и обновите страницу.
+  </p>
+  <p class="muted">
+    На компьютере: <code>python app.py</code> или <code>run.bat</code> (Windows),
+    <code>./run.sh</code> (Linux).
+  </p>
+  <a class="btn" href="{{ url_for('index') }}">Попробовать снова</a>
+</section>
+
+{% endblock %}

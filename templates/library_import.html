@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}Проверка пакета — NetPractice{% endblock %}
+{% block content %}
+
+{% set active_learning_tab = 'modules' %}
+{% include "_learning_tabs.html" %}
+
+<p class="breadcrumb"><a href="{{ url_for('library') }}">← Библиотека</a></p>
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Предпросмотр импорта</p>
+    <h1>{{ pack.manifest.title }}</h1>
+    <p class="lead">{{ pack.manifest.description }}</p>
+  </div>
+</div>
+
+{% if status == 'update' %}
+  <div class="notice notice-info">
+    <strong>Доступно обновление.</strong>
+    Установлена версия {{ existing.module_version }}, в пакете — {{ pack.manifest.module_version }}.
+    История ответов и XP сохранятся; изменившиеся задания сопоставляются по стабильным ID.
+  </div>
+{% elif status == 'same' %}
+  <div class="notice notice-warning">
+    <strong>Эта версия уже установлена.</strong>
+    Повторная установка ничего не изменит. Можно закрыть страницу.
+  </div>
+{% elif status == 'downgrade' %}
+  <div class="notice notice-warning">
+    <strong>Пакет старше установленного.</strong>
+    Сейчас установлена версия {{ existing.module_version }}, в файле — {{ pack.manifest.module_version }}.
+    Установка старой версии может ухудшить содержимое модуля. История сохранится.
+  </div>
+{% elif status == 'reinstall' %}
+  <div class="notice notice-info">
+    <strong>Модуль был удалён.</strong>
+    Он будет восстановлен; сохранённая история ответов останется на месте.
+  </div>
+{% else %}
+  <div class="notice notice-success">
+    <strong>Пакет проверен.</strong>
+    Можно установить модуль.
+  </div>
+{% endif %}
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Информация о модуле</h2>
+    <dl class="pack-facts">
+      <dt>Автор</dt><dd>{{ pack.manifest.author }}</dd>
+      <dt>Версия</dt><dd>{{ pack.manifest.module_version }}</dd>
+      <dt>Категория</dt><dd>{{ pack.manifest.category }}</dd>
+      <dt>Сложность</dt><dd>{{ PACK_DIFFICULTY_LABELS.get(pack.manifest.difficulty, pack.manifest.difficulty) }}</dd>
+      <dt>Язык</dt><dd>{{ pack.manifest.language }}</dd>
+      <dt>Создан</dt><dd>{{ pack.manifest.created_at }}</dd>
+      <dt>Размер</dt><dd>{{ (pack.package_size / 1024) | round(1) }} КБ</dd>
+      <dt>Формат</dt><dd>nptpack v{{ pack.manifest.format_version }}</dd>
+    </dl>
+  </section>
+
+  <section class="card">
+    <h2>Содержимое</h2>
+    <div class="mini-stats library-import-stats">
+      <div><span class="mini-label">Заданий</span><strong>{{ pack.questions|length }}</strong></div>
+      <div><span class="mini-label">Лабораторных</span><strong>{{ pack.labs|length }}</strong></div>
+      <div><span class="mini-label">Изображений</span><strong>{{ pack.assets|length }}</strong></div>
+    </div>
+    <p class="muted">База данных ещё не изменена. Ниже — только предварительный просмотр.</p>
+    {% if pack.questions %}
+      <h3>Первые задания</h3>
+      <ul class="plain-list">
+        {% for question in pack.questions[:5] %}
+          <li>{{ question.topic }} — {{ TYPE_LABELS[question.type] }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% if pack.labs %}
+      <h3>Лабораторные работы</h3>
+      <ul class="plain-list">
+        {% for lab in pack.labs %}
+          <li>{{ lab.title }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </section>
+</div>
+
+<section class="card">
+  <div class="card-heading">
+    <h2>Подтверждение</h2>
+  </div>
+  {% if status == 'same' %}
+    <p class="muted">Устанавливать нечего: версия совпадает.</p>
+    <a class="btn btn-secondary" href="{{ url_for('library') }}">Вернуться в библиотеку</a>
+  {% else %}
+    <form method="post" action="{{ url_for('library_import_confirm') }}" data-start-form>
+      <input type="hidden" name="token" value="{{ token }}">
+      {% if status == 'downgrade' %}
+        <label class="checkbox-row">
+          <input type="checkbox" name="allow_downgrade" value="yes" required>
+          <span>Я понимаю, что устанавливаю версию старше текущей.</span>
+        </label>
+      {% endif %}
+      <div class="answer-actions">
+        <button class="btn" type="submit">
+          {% if status == 'update' %}Обновить модуль{% elif status == 'reinstall' %}Восстановить модуль{% else %}Установить модуль{% endif %}
+        </button>
+        <button class="btn btn-ghost" type="submit" formaction="{{ url_for('library_import_cancel') }}" formnovalidate>Отмена</button>
+      </div>
+    </form>
+  {% endif %}
+</section>
+
+{% endblock %}

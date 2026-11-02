@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Главная — NetPractice{% endblock %}
+{% block content %}
+
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Ежедневная практика</p>
+    <h1>Короткое занятие — понятнее сети</h1>
+    <p class="lead">
+      8 заданий на 10–15 минут: новые темы, расчёты и разбор ошибок.
+      Без штрафов и спешки — занимайтесь в своём темпе.
+    </p>
+    <div class="hero-actions">
+      {% if daily %}
+        <a class="btn" href="{{ url_for('lesson', session_id=daily.id) }}">Продолжить занятие</a>
+        <span class="hero-progress">Задание {{ daily.position + 1 }} из {{ daily.total }}</span>
+      {% else %}
+        <form method="post" action="{{ url_for('daily_start') }}" data-start-form>
+          <button class="btn" type="submit">
+            {% if completed_today %}Пройти ещё одно занятие{% else %}Начать занятие{% endif %}
+          </button>
+        </form>
+      {% endif %}
+      <a class="btn btn-secondary" href="{{ url_for('learn') }}">К обучению</a>
+    </div>
+  </div>
+  <div class="hero-metrics">
+    <div class="metric">
+      <span class="metric-label">Текущая серия</span>
+      <strong>{{ stats.streak }} <small>дн.</small></strong>
+      <span class="metric-note">Максимум: {{ stats.max_streak }}</span>
+    </div>
+  </div>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-heading">
+      <h2>Сегодня</h2>
+      <span class="muted">{{ today|ru_date }}</span>
+    </div>
+    <div class="progress-row">
+      <span>Выполнено заданий</span>
+      <span>{{ stats.today_answered }} / {{ daily_size }}</span>
+    </div>
+    <progress value="{{ stats.today_answered }}" max="{{ daily_size }}">{{ daily_percent }}%</progress>
+    <div class="mini-stats">
+      <div><span class="mini-label">Верно</span><strong>{{ stats.today_correct }}</strong></div>
+      <div><span class="mini-label">XP за день</span><strong>{{ stats.today_xp }}</strong></div>
+      <div><span class="mini-label">В повторении</span><strong>{{ stats.review_count }}</strong></div>
+    </div>
+    {% if stats.streak == 0 and stats.today_answered == 0 %}
+      <p class="hint">Одно занятие сегодня начнёт серию.</p>
+    {% elif stats.today_answered > 0 %}
+      <p class="hint">Серия на сегодня уже учтена. Повторные занятия не увеличат её второй раз.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-heading">
+      <h2>Повторение ошибок</h2>
+      <span class="badge">{{ stats.review_count }}</span>
+    </div>
+    {% if stats.review_count %}
+      <p class="muted">
+        Задания, где были ошибки. Верный ответ убирает задание из списка,
+        а XP за повторное решение не начисляется повторно.
+      </p>
+      <a class="btn btn-secondary btn-block" href="{{ url_for('review') }}">Перейти к повторению</a>
+    {% else %}
+      <p class="muted">Список пуст — ошибок пока нет или они уже исправлены.</p>
+      <a class="btn btn-secondary btn-block" href="{{ url_for('learn') }}">К обучению</a>
+    {% endif %}
+  </section>
+</div>
+
+<div class="home-calendar">
+  {% include "_calendar.html" %}
+</div>
+
+{% endblock %}

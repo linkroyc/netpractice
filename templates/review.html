@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Повторение — NetPractice{% endblock %}
+{% block content %}
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Работа над ошибками</p>
+    <h1>Повторение</h1>
+    <p class="lead">
+      Здесь собраны задания, где вы ошибались. Правильный ответ убирает задание
+      из списка. XP за повторное решение того же задания не начисляется.
+    </p>
+  </div>
+</div>
+
+{% if incomplete %}
+  <section class="card resume-card">
+    <div>
+      <h2>Незавершённое повторение</h2>
+      <p class="muted">{{ incomplete.position }} из {{ incomplete.total }} заданий пройдено.</p>
+    </div>
+    <a class="btn" href="{{ url_for('lesson', session_id=incomplete.id) }}">Продолжить</a>
+  </section>
+{% endif %}
+
+{% if items %}
+  <section class="card">
+    <div class="card-heading">
+      <h2>Задания на повторение: {{ items|length }}</h2>
+      <form method="post" action="{{ url_for('review_start') }}" data-start-form>
+        <button class="btn" type="submit">Начать повторение</button>
+      </form>
+    </div>
+    <p class="muted">За одну сессию предлагается до 8 заданий, самые частые ошибки — первыми.</p>
+
+    <ul class="task-list">
+      {% for item in items %}
+        <li class="task-row">
+          <div class="task-main">
+            <div class="task-meta">
+              <span class="badge">Модуль {{ item.module_id }}</span>
+              <span class="badge">{{ TYPE_LABELS[item.question.type] }}</span>
+              <span class="difficulty difficulty-{{ item.question.difficulty }}">{{ DIFFICULTY_LABELS[item.question.difficulty] }}</span>
+            </div>
+            <strong>{{ item.question.topic }}</strong>
+            <p class="muted">{{ item.question.prompt|truncate(150, true, '…') }}</p>
+          </div>
+          <div class="task-state">
+            <span class="status status-tried">Ошибок: {{ item.wrong_count }}</span>
+            <span class="xp-note">{{ item.last_wrong_at|ru_datetime }}</span>
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% else %}
+  <section class="card empty-state">
+    <h2>Ошибок для повторения нет</h2>
+    <p class="muted">
+      Это может означать, что вы ещё не ошибались или уже исправили все ошибки.
+      Новые ошибки появятся здесь автоматически.
+    </p>
+    <div class="hero-actions">
+      <a class="btn" href="{{ url_for('learn') }}">К обучению</a>
+      <a class="btn btn-secondary" href="{{ url_for('index') }}">На главную</a>
+    </div>
+  </section>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — NetPractice{% endblock %}
+{% block content %}
+
+<section class="card empty-state">
+  <p class="eyebrow">Ошибка</p>
+  <h1>{{ title }}</h1>
+  <p class="lead">{{ message }}</p>
+  <div class="hero-actions">
+    <a class="btn" href="{{ url_for('index') }}">На главную</a>
+    <a class="btn btn-secondary" href="{{ url_for('learn') }}">К обучению</a>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Занятие завершено — NetPractice{% endblock %}
+{% block content %}
+
+<section class="hero complete-hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Готово</p>
+    <h1>Занятие завершено</h1>
+    <p class="lead">{{ title }}{% if session.completed_at %} · {{ session.completed_at|ru_datetime }}{% endif %}</p>
+    <div class="hero-actions">
+      <a class="btn btn-secondary" href="{{ url_for('index') }}">На главную</a>
+      {% if session.kind == 'daily' %}
+        <form method="post" action="{{ url_for('daily_start') }}">
+          <button class="btn" type="submit">Ещё занятие</button>
+        </form>
+      {% elif session.kind == 'review' %}
+        <a class="btn" href="{{ url_for('review') }}">К повторению</a>
+      {% else %}
+        <a class="btn" href="{{ url_for('learn') }}">К обучению</a>
+      {% endif %}
+    </div>
+  </div>
+  <div class="hero-metrics">
+    <div class="metric">
+      <span class="metric-label">Правильно</span>
+      <strong>{{ correct }} <small>из {{ answered }}</small></strong>
+    </div>
+    <div class="metric">
+      <span class="metric-label">Точность</span>
+      <strong>{{ accuracy }}%</strong>
+    </div>
+    <div class="metric">
+      <span class="metric-label">Получено XP</span>
+      <strong>+{{ xp }}</strong>
+    </div>
+  </div>
+</section>
+
+{% if session.bonus_xp %}
+  <div class="notice notice-success">
+    Бонус за завершение ежедневного занятия: +{{ session.bonus_xp }} XP.
+    Бонус начисляется один раз в календарный день.
+  </div>
+{% endif %}
+
+{% if review_left %}
+  <div class="notice notice-info">
+    В повторении осталось {{ review_left }} заданий. Можно закрыть их сейчас
+    или вернуться позже.
+    <a href="{{ url_for('review') }}">Перейти к повторению</a>
+  </div>
+{% endif %}
+
+<section class="card">
+  <h2>Результаты по заданиям</h2>
+  <ul class="task-list result-list">
+    {% for item in items %}
+      <li class="task-row">
+        <div class="task-main">
+          <div class="task-meta">
+            <span class="badge">{{ TYPE_LABELS[item.question.type] }}</span>
+            <span class="badge">Модуль {{ item.question.module }}</span>
+          </div>
+          <strong>{{ item.question.topic }}</strong>
+          <p class="muted">{{ item.question.prompt|truncate(120, true, '…') }}</p>
+        </div>
+        <div class="task-state">
+          {% if item.correct %}
+            <span class="status status-done">Верно</span>
+          {% else %}
+            <span class="status status-bad">Ошибка</span>
+          {% endif %}
+          {% if item.xp %}
+            <span class="xp-note">+{{ item.xp }} XP</span>
+          {% endif %}
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+<p class="hint center">
+  Регулярность важнее длины занятия. Следующая короткая сессия продолжит вашу серию.
+</p>
+
+{% endblock %}

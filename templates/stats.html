@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Статистика — NetPractice{% endblock %}
+{% block content %}
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Прогресс</p>
+    <h1>Статистика</h1>
+    <p class="lead">Данные за всё время. Календарь показывает дни, когда вы отвечали на задания.</p>
+  </div>
+</div>
+
+<div class="grid-4">
+  <div class="stat-card">
+    <span class="stat-label">Текущая серия</span>
+    <strong>{{ stats.streak }} дн.</strong>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Лучшая серия</span>
+    <strong>{{ stats.max_streak }} дн.</strong>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Всего XP</span>
+    <strong>{{ stats.xp }}</strong>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Точность</span>
+    <strong>{{ stats.accuracy }}%</strong>
+  </div>
+</div>
+
+<section class="card">
+  <div class="card-heading">
+    <h2>Знания по программе</h2>
+    <span class="badge">{{ total_correct }} из {{ total_questions }} заданий</span>
+  </div>
+  <div class="progress-row">
+    <span>Верно решённые задания</span>
+    <span>{{ overall_percent }}%</span>
+  </div>
+  <progress value="{{ total_correct }}" max="{{ total_questions }}">{{ overall_percent }}%</progress>
+
+  <div class="curriculum-grid">
+    {% for module in progress %}
+      <div class="curriculum-item {{ 'curriculum-locked' if not module.unlocked else '' }}">
+        <span class="curriculum-index">{{ module.id }}</span>
+        <span class="curriculum-title">{{ module.title }}</span>
+        <span class="curriculum-count">{{ module.correct }}/{{ module.total }}</span>
+        <progress class="curriculum-progress" value="{{ module.correct }}" max="{{ module.total }}">{{ module.percent_correct }}%</progress>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% include "_calendar.html" %}
+
+<section class="card">
+  <h2>Резервная копия</h2>
+  <p class="muted">
+    JSON-файл содержит историю ответов, начисления XP, список повторения
+    и бонусы за ежедневные занятия.
+  </p>
+  <div class="backup-actions">
+    <a class="btn btn-secondary" href="{{ url_for('data_export') }}" download>Экспорт</a>
+    <button class="btn" type="button" id="backup-import-toggle"
+            aria-expanded="false" aria-controls="backup-import-panel">Импорт</button>
+  </div>
+  <div class="backup-panel" id="backup-import-panel" hidden>
+    <form method="post" action="{{ url_for('data_import') }}"
+          enctype="multipart/form-data" id="backup-import-form" class="import-form">
+      <label class="field">
+        <span>Файл резервной копии (.json)</span>
+        <input type="file" name="file" id="backup-file"
+               accept=".json,application/json" required>
+      </label>
+      <div class="backup-submit-row">
+        <button class="btn" type="submit" name="mode" value="merge"
+                data-backup-submit disabled>Объединить</button>
+        <button class="btn btn-secondary" type="submit" name="mode" value="replace"
+                data-backup-submit disabled>Заменить полностью</button>
+      </div>
+    </form>
+  </div>
+</section>
+
+{% endblock %}

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="dark">
+  <title>{% block title %}NetPractice{% endblock %}</title>
+  <meta name="description" content="Локальный тренажёр сетевого администратора: короткие ежедневные занятия, подсети, диагностика, VLAN и Linux.">
+  <meta name="theme-color" content="#0b1117">
+  <link rel="manifest" href="{{ url_for('manifest') }}">
+  <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="NetPractice">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=9">
+</head>
+<body>
+<a class="skip-link" href="#main">Перейти к содержанию</a>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="{{ url_for('index') }}">
+      <span class="brand-mark" aria-hidden="true">NP</span>
+      <span class="brand-text">NetPractice</span>
+    </a>
+
+    {% set ep = request.endpoint or '' %}
+    {% set learning_active = ep in ['learn', 'module_detail', 'library', 'library_pack', 'library_delete_page', 'library_import_preview', 'library_import_confirm'] %}
+    {% set stats_active = ep in ['stats_page', 'data_page', 'data_export', 'data_import'] %}
+    <nav class="main-nav" aria-label="Основная навигация">
+      <a href="{{ url_for('index') }}" class="{{ 'active' if ep == 'index' else '' }}">Главная</a>
+      <a href="{{ url_for('learn') }}" class="{{ 'active' if learning_active else '' }}">Обучение</a>
+      <a href="{{ url_for('review') }}" class="{{ 'active' if ep == 'review' else '' }}">Повторение</a>
+      <a href="{{ url_for('stats_page') }}" class="{{ 'active' if stats_active else '' }}">Статистика</a>
+    </nav>
+
+    <div class="header-metrics" aria-label="Ваш прогресс">
+      <span class="chip" title="Текущая серия дней">
+        <span class="chip-label">Серия</span>
+        <strong>{{ global_stats.streak }}</strong>
+      </span>
+      <span class="chip" title="Всего заработано XP">
+        <span class="chip-label">XP</span>
+        <strong>{{ global_stats.xp }}</strong>
+      </span>
+    </div>
+  </div>
+</header>
+
+<main id="main" class="wrap">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-list" role="status">
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p>NetPractice — локальный тренажёр. Работает без интернета после установки зависимостей. Прогресс хранится в SQLite на этом устройстве.</p>
+  </div>
+</footer>
+
+{% set ep = request.endpoint or '' %}
+{% set learning_active = ep in ['learn', 'module_detail', 'library', 'library_pack', 'library_delete_page', 'library_import_preview', 'library_import_confirm'] %}
+{% set stats_active = ep in ['stats_page', 'data_page', 'data_export', 'data_import'] %}
+<nav class="bottom-nav" aria-label="Навигация для телефона">
+  <a href="{{ url_for('index') }}" class="{{ 'active' if ep == 'index' else '' }}" {% if ep == 'index' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg>
+    <span>Главная</span>
+  </a>
+  <a href="{{ url_for('learn') }}" class="{{ 'active' if learning_active else '' }}" {% if learning_active %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4z"/><path d="M20 4h-7a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h7z"/></svg>
+    <span>Обучение</span>
+  </a>
+  <a href="{{ url_for('review') }}" class="{{ 'active' if ep == 'review' else '' }}" {% if ep == 'review' %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10a8 8 0 1 1 2 7"/><path d="M4 4v6h6"/></svg>
+    <span>Review</span>
+  </a>
+  <a href="{{ url_for('stats_page') }}" class="{{ 'active' if stats_active else '' }}" {% if stats_active %}aria-current="page"{% endif %}>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+    <span>Статистика</span>
+  </a>
+</nav>
+
+<script src="{{ url_for('static', filename='js/app.js') }}?v=9" defer></script>
+</body>
+</html>

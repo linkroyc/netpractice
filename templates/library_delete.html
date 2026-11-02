@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Удаление модуля — NetPractice{% endblock %}
+{% block content %}
+
+{% set active_learning_tab = 'modules' %}
+{% include "_learning_tabs.html" %}
+
+<p class="breadcrumb"><a href="{{ url_for('library_pack', pack_id=module.pack_id) }}">← {{ module.title }}</a></p>
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Управление библиотекой</p>
+    <h1>Удалить «{{ module.title }}»?</h1>
+    <p class="lead">Модуль исчезнет из библиотеки. Это действие можно отменить повторной установкой пакета.</p>
+  </div>
+</div>
+
+<section class="card">
+  <div class="notice notice-warning">
+    <strong>История сохранится.</strong>
+    Ответы, XP, серия, достижения и статистика не удаляются. Задания модуля
+    станут архивными и перестанут попадать в новые тренировки и повторение.
+  </div>
+  <p class="muted">
+    Системные модули NetPractice удалить нельзя. Удаление затрагивает только
+    выбранный пользовательский пакет.
+  </p>
+  <form method="post" action="{{ url_for('library_delete', pack_id=module.pack_id) }}" data-start-form>
+    <input type="hidden" name="confirm" value="yes">
+    <div class="answer-actions">
+      <button class="btn danger-button" type="submit">Удалить модуль</button>
+      <a class="btn btn-secondary" href="{{ url_for('library_pack', pack_id=module.pack_id) }}">Отмена</a>
+    </div>
+  </form>
+</section>
+
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} — NetPractice{% endblock %}
+{% block content %}
+
+{% macro placeholder_for(kind) -%}
+  {%- if kind == 'ip' -%}Например: 192.168.10.128
+  {%- elif kind == 'mask' -%}Например: 255.255.255.192
+  {%- elif kind == 'cidr' -%}Например: /26
+  {%- elif kind == 'int' -%}Введите число
+  {%- else -%}Введите ответ
+  {%- endif -%}
+{%- endmacro %}
+
+<div class="lesson-top">
+  <div>
+    <p class="eyebrow">{{ title }}</p>
+    <h1>Задание {{ question_number }} из {{ session.total }}</h1>
+  </div>
+  <a class="link-quiet" href="{{ url_for('index') }}">Выйти, прогресс сохранится</a>
+</div>
+
+<div class="progress-row">
+  <span>{{ question.module }} модуль · {{ question.topic }}</span>
+  <span>{{ progress_percent }}%</span>
+</div>
+<progress value="{{ session.position }}" max="{{ session.total }}">{{ progress_percent }}%</progress>
+
+<section class="card question-card">
+  <div class="task-meta">
+    <span class="badge">{{ TYPE_LABELS[question.type] }}</span>
+    <span class="difficulty difficulty-{{ question.difficulty }}">{{ DIFFICULTY_LABELS[question.difficulty] }}</span>
+    <span class="xp-note">+{{ question.xp }} XP за первое верное решение</span>
+  </div>
+
+  <h2 class="question-prompt">{{ question.prompt }}</h2>
+
+  {% if question.image %}
+    <img class="lab-image question-image"
+         src="{{ url_for('library_asset', pack_id=question.pack_id, filename=question.image) }}"
+         alt="Иллюстрация к заданию «{{ question.topic }}»" loading="lazy">
+  {% endif %}
+
+  {% if question.hints %}
+    <details class="hint-box">
+      <summary>Подсказка</summary>
+      <ul class="theory-list">
+        {% for hint in question.hints %}<li>{{ hint }}</li>{% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('lesson_answer', session_id=session.id) }}" class="answer-form">
+    <input type="hidden" name="question_id" value="{{ question.id }}">
+
+    {% if question.type == 'choice' %}
+      <fieldset class="choice-list">
+        <legend class="sr-only">Выберите один вариант</legend>
+        {% for option in question.options %}
+          <label class="choice-item">
+            <input type="radio" name="value" value="{{ loop.index0 }}" required>
+            <span>{{ option }}</span>
+          </label>
+        {% endfor %}
+      </fieldset>
+
+    {% elif question.type == 'input' %}
+      <label class="field">
+        <span>Ваш ответ</span>
+        <input class="input-large" type="text" name="value"
+               placeholder="{{ placeholder_for(question.answer_kind) }}"
+               autocomplete="off" autocapitalize="off" spellcheck="false" required>
+      </label>
+
+    {% elif question.type == 'multi' %}
+      <div class="field-grid">
+        {% for field in question.fields %}
+          <label class="field">
+            <span>{{ field.label }}</span>
+            <input class="input-large" type="text" name="{{ field.key }}"
+                   placeholder="{{ placeholder_for(field.kind) }}"
+                   autocomplete="off" autocapitalize="off" spellcheck="false" required>
+          </label>
+        {% endfor %}
+      </div>
+
+    {% else %}
+      <label class="field">
+        <span>Ваш ответ</span>
+        <textarea name="text" rows="7" required
+                  placeholder="Опишите проверки, их порядок и что каждая из них покажет."></textarea>
+      </label>
+      <p class="hint">
+        Дословное совпадение не требуется. После ответа вы увидите, какие
+        ключевые пункты учтены, а какие стоит добавить.
+      </p>
+    {% endif %}
+
+    <div class="answer-actions">
+      <button class="btn" type="submit">Проверить ответ</button>
+      <button class="btn btn-ghost" type="submit" name="reveal" value="1" formnovalidate>
+        Не знаю — показать разбор
+      </button>
+    </div>
+  </form>
+</section>
+
+<p class="hint center">Ответы сохраняются сразу. Если закрыть страницу, занятие продолжится с этого задания.</p>
+
+{% endblock %}

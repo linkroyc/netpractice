@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Результат: {{ question.topic }} — NetPractice{% endblock %}
+{% block content %}
+
+<div class="lesson-top">
+  <div>
+    <p class="eyebrow">{{ title }}</p>
+    <h1>Задание {{ question_number }} из {{ session.total }}</h1>
+  </div>
+  <a class="link-quiet" href="{{ url_for('index') }}">Выйти, прогресс сохранится</a>
+</div>
+
+<div class="progress-row">
+  <span>{{ question.module }} модуль · {{ question.topic }}</span>
+  <span>{{ progress_percent }}%</span>
+</div>
+<progress value="{{ session.position + 1 }}" max="{{ session.total }}">{{ progress_percent }}%</progress>
+
+<section class="feedback-banner {{ 'feedback-ok' if attempt.correct else 'feedback-bad' }}">
+  <div class="feedback-symbol" aria-hidden="true">{{ '✓' if attempt.correct else '×' }}</div>
+  <div>
+    <h2>{{ 'Верно' if attempt.correct else 'Пока неверно' }}</h2>
+    <p>
+      {% if attempt.correct %}
+        {% if result.self_assessed %}
+          Ответ зачтён по вашей самооценке.
+        {% else %}
+          Задание решено правильно.
+        {% endif %}
+      {% else %}
+        Разберите объяснение ниже — это часть обучения, а не штраф.
+      {% endif %}
+    </p>
+    <div class="feedback-meta">
+      {% if question.type == 'multi' %}
+        <span class="badge">Совпало полей: {{ result.score }}%</span>
+      {% endif %}
+      {% if attempt.xp_awarded %}
+        <span class="badge badge-success">+{{ attempt.xp_awarded }} XP</span>
+      {% elif attempt.correct %}
+        <span class="badge">XP за задание уже начислялся ранее</span>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Как проверялся ответ</h2>
+  <p class="muted">{{ question.prompt }}</p>
+
+  {% if result.fields %}
+    <div class="table-wrap">
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>Пункт</th>
+            <th>Ваш ответ</th>
+            <th>Правильный ответ</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for field in result.fields %}
+            <tr class="{{ 'row-ok' if field.correct else 'row-bad' }}">
+              <td>{{ field.label }}</td>
+              <td>{{ field.given if field.given else '—' }}</td>
+              <td>{{ field.expected }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+  {% if question.type in ['scenario', 'troubleshoot'] %}
+    <h3>Ваш ответ</h3>
+    {% if attempt.answer.text %}
+      <div class="user-answer">{{ attempt.answer.text }}</div>
+    {% else %}
+      <p class="muted">Ответ не был введён.</p>
+    {% endif %}
+
+    <h3>Ключевые пункты</h3>
+    <p class="muted">
+      Учтено {{ result.matched|length }} из {{ result.matched|length + result.missed|length }}.
+      {% if not attempt.correct %}
+        Для автоматического зачёта нужно минимум {{ result.min_points }}.
+      {% endif %}
+    </p>
+    <ul class="point-list">
+      {% for label in result.matched %}
+        <li class="point-ok"><span aria-hidden="true">✓</span> {{ label }}</li>
+      {% endfor %}
+      {% for label in result.missed %}
+        <li class="point-miss"><span aria-hidden="true">—</span> {{ label }}</li>
+      {% endfor %}
+    </ul>
+
+    {% if self_check_available %}
+      <div class="notice notice-info self-check">
+        <h3>Автопроверка не поняла формулировку?</h3>
+        <p>
+          Система ищет ключевые понятия, а не дословный текст. Если ваш ответ
+          технически верен по смыслу, отметьте это. XP начисляется один раз
+          за задание.
+        </p>
+        <div class="answer-actions">
+          <form method="post" action="{{ url_for('lesson_self_mark', session_id=session.id) }}">
+            <input type="hidden" name="value" value="correct">
+            <button class="btn btn-secondary" type="submit">Мой ответ верен по смыслу</button>
+          </form>
+          <form method="post" action="{{ url_for('lesson_self_mark', session_id=session.id) }}">
+            <input type="hidden" name="value" value="understood">
+            <button class="btn btn-ghost" type="submit">Понял ошибку</button>
+          </form>
+        </div>
+      </div>
+    {% elif result.understood %}
+      <p class="notice notice-muted">Отмечено: ошибка понятна. Переходите дальше.</p>
+    {% endif %}
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>Разбор</h2>
+  <p>{{ question.explanation }}</p>
+
+  <h3>Пример решения</h3>
+  <pre class="sample">{{ question.sample }}</pre>
+
+  <p class="source">Источник: {{ question.source }}. Тема: {{ question.topic }}.</p>
+</section>
+
+<form method="post" action="{{ url_for('lesson_next', session_id=session.id) }}">
+  <button class="btn btn-block" type="submit">
+    {% if is_last %}Завершить занятие{% else %}Следующее задание{% endif %}
+  </button>
+</form>
+
+{% endblock %}

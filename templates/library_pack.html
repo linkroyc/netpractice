@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}{{ module.title }} — NetPractice{% endblock %}
+{% block content %}
+
+{% set active_learning_tab = 'modules' %}
+{% include "_learning_tabs.html" %}
+
+<p class="breadcrumb"><a href="{{ url_for('library') }}">← Библиотека</a></p>
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Пользовательский модуль · v{{ module.module_version }}</p>
+    <h1>{{ module.title }}</h1>
+    <p class="lead">{{ module.description }}</p>
+  </div>
+</div>
+
+<div class="pack-meta">
+  <span>{{ module.author }}</span>
+  <span>{{ PACK_DIFFICULTY_LABELS.get(module.difficulty, module.difficulty) }}</span>
+  <span>{{ module.category }}</span>
+  <span>{{ module.language }}</span>
+</div>
+
+<div class="grid-4">
+  <div class="stat-card">
+    <span class="stat-label">Заданий</span>
+    <strong>{{ progress.total }}</strong>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Попробовано</span>
+    <strong>{{ progress.attempted }}</strong>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Решено верно</span>
+    <strong>{{ progress.correct }}</strong>
+  </div>
+  <div class="stat-card">
+    <span class="stat-label">Прогресс</span>
+    <strong>{{ progress.percent }}%</strong>
+  </div>
+</div>
+
+{% if incomplete %}
+  <section class="card resume-card">
+    <div>
+      <h2>Есть незавершённая тренировка</h2>
+      <p class="muted">{{ incomplete.position }} из {{ incomplete.total }} заданий пройдено.</p>
+    </div>
+    <a class="btn" href="{{ url_for('lesson', session_id=incomplete.id) }}">Продолжить</a>
+  </section>
+{% endif %}
+
+<section class="card">
+  <div class="card-heading">
+    <h2>Практика модуля</h2>
+    <form method="post" action="{{ url_for('library_start', pack_id=module.pack_id) }}" data-start-form>
+      <button class="btn" type="submit">Начать обучение: {{ 6 if progress.total > 6 else progress.total }} заданий</button>
+    </form>
+  </div>
+  <p class="muted">
+    Задания проверяются существующими механизмами NetPractice. Ошибки попадают
+    в общий список повторения, XP начисляется по обычным правилам.
+  </p>
+</section>
+
+<section class="card">
+  <div class="card-heading">
+    <h2>Содержание</h2>
+    <span class="badge">{{ questions|length }} заданий</span>
+  </div>
+  <ul class="task-list">
+    {% for question in questions %}
+      <li class="task-row">
+        <div class="task-main">
+          <div class="task-meta">
+            <span class="badge">{{ TYPE_LABELS[question.type] }}</span>
+            <span class="difficulty difficulty-{{ question.difficulty }}">{{ DIFFICULTY_LABELS[question.difficulty] }}</span>
+          </div>
+          <strong>{{ question.topic }}</strong>
+          <p class="muted">{{ question.prompt|truncate(130, true, '…') }}</p>
+          {% if question.hints %}
+            <details class="hint-box">
+              <summary>Подсказка</summary>
+              <p>{{ question.hints[0] }}</p>
+            </details>
+          {% endif %}
+        </div>
+        <div class="task-state">
+          {% if question.ever_correct %}
+            <span class="status status-done">Решено</span>
+          {% elif question.attempted %}
+            <span class="status status-tried">Была ошибка</span>
+          {% else %}
+            <span class="status">Не начато</span>
+          {% endif %}
+          <span class="xp-note">+{{ question.xp }} XP</span>
+        </div>
+      </li>
+    {% endfor %}
+  </ul>
+</section>
+
+{% if labs %}
+  <section class="library-section">
+    <div class="card-heading library-heading">
+      <div>
+        <h2>Лабораторные работы</h2>
+        <p class="muted">Выполняются вручную по шагам и критериям. Автоматической проверки лабораторий нет.</p>
+      </div>
+      <span class="badge">{{ labs|length }}</span>
+    </div>
+
+    {% for lab in labs %}
+      <article class="card lab-card">
+        <div class="card-heading">
+          <h2>{{ lab.title }}</h2>
+          <span class="badge">Ручная проверка</span>
+        </div>
+        <p>{{ lab.description }}</p>
+
+        {% if lab.assets %}
+          <div class="lab-assets">
+            {% for asset in lab.assets %}
+              <img class="lab-image" src="{{ url_for('library_asset', pack_id=module.pack_id, filename=asset) }}"
+                   alt="Иллюстрация к лабораторной работе «{{ lab.title }}»" loading="lazy">
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <h3>Цель</h3>
+        <p>{{ lab.goal }}</p>
+
+        {% if lab.prerequisites %}
+          <h3>Начальные условия</h3>
+          <ul class="theory-list">
+            {% for item in lab.prerequisites %}<li>{{ item }}</li>{% endfor %}
+          </ul>
+        {% endif %}
+
+        <h3>Теоретическая информация</h3>
+        <p>{{ lab.theory }}</p>
+
+        <h3>Последовательность</h3>
+        <ol class="lab-steps">
+          {% for step in lab.steps %}<li>{{ step }}</li>{% endfor %}
+        </ol>
+
+        {% if lab.commands %}
+          <h3>Команды</h3>
+          <pre class="sample">{% for command in lab.commands %}{{ command }}
+{% endfor %}</pre>
+        {% endif %}
+
+        <h3>Ожидаемый результат</h3>
+        <ul class="theory-list">
+          {% for item in lab.expected %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+
+        <h3>Критерии проверки</h3>
+        <ul class="theory-list">
+          {% for item in lab.criteria %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+
+        {% if lab.hints %}
+          <details class="hint-box">
+            <summary>Подсказки</summary>
+            <ul class="theory-list">
+              {% for hint in lab.hints %}<li>{{ hint }}</li>{% endfor %}
+            </ul>
+          </details>
+        {% endif %}
+
+        <h3>Итоговое объяснение</h3>
+        <p>{{ lab.explanation }}</p>
+      </article>
+    {% endfor %}
+  </section>
+{% endif %}
+
+<section class="card">
+  <div class="card-heading">
+    <h2>Управление модулем</h2>
+  </div>
+  <div class="module-actions">
+    <a class="btn btn-secondary" href="{{ url_for('library_export', pack_id=module.pack_id) }}">Экспорт .nptpack</a>
+    <a class="btn btn-ghost" href="{{ url_for('library') }}#import">Обновить модуль</a>
+    <a class="btn btn-ghost danger-link" href="{{ url_for('library_delete_page', pack_id=module.pack_id) }}">Удалить модуль</a>
+  </div>
+  <p class="hint">При обновлении прогресс сохраняется по стабильным ID. При удалении история ответов остаётся в архиве.</p>
+</section>
+
+{% endblock %}

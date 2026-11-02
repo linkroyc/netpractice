@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Обучение — NetPractice{% endblock %}
+{% block content %}
+
+{% set active_learning_tab = 'curriculum' %}
+{% include "_learning_tabs.html" %}
+
+<div class="page-heading">
+  <div>
+    <p class="eyebrow">Программа</p>
+    <h1>Обучение</h1>
+    <p class="lead">Семь модулей от основ до комплексных лабораторных работ. Новый модуль открывается после практики предыдущего.</p>
+  </div>
+</div>
+
+{% if incomplete %}
+  <section class="card resume-card">
+    <div>
+      <h2>Незавершённая тренировка</h2>
+      <p class="muted">
+        {{ incomplete.position }} из {{ incomplete.total }} заданий пройдено.
+        Можно продолжить с того же места.
+      </p>
+    </div>
+    <a class="btn" href="{{ url_for('lesson', session_id=incomplete.id) }}">Продолжить тренировку</a>
+  </section>
+{% endif %}
+
+<div class="module-list">  {% for module in progress %}
+    <article class="card module-card {{ 'locked' if not module.unlocked else '' }}">
+      <div class="module-head">
+        <div class="module-index" aria-hidden="true">{{ module.id }}</div>
+        <div class="module-title">
+          <h2>{{ module.title }}</h2>
+          <p class="muted">{{ module.subtitle }}</p>
+        </div>
+        <div class="module-status">
+          {% if module.unlocked %}
+            <span class="badge badge-success">Открыт</span>
+          {% else %}
+            <span class="badge">Закрыт</span>
+          {% endif %}
+        </div>
+      </div>
+
+      <p>{{ module.goal }}</p>
+
+      {% if module.unlocked %}
+        <div class="progress-row">
+          <span>Решено верно: {{ module.correct }} из {{ module.total }}</span>
+          <span>{{ module.percent_correct }}%</span>
+        </div>
+        <progress value="{{ module.correct }}" max="{{ module.total }}">{{ module.percent_correct }}%</progress>
+        <div class="module-actions">
+          <a class="btn btn-secondary" href="{{ url_for('module_detail', module_id=module.id) }}">Открыть модуль</a>
+          <form method="post" action="{{ url_for('practice_start', module_id=module.id) }}" data-start-form>
+            <button class="btn btn-ghost" type="submit">Тренировка</button>
+          </form>
+        </div>
+      {% else %}
+        <div class="notice notice-muted">
+          Модуль откроется после того, как вы попробуете не менее
+          {{ module.unlock_required }} заданий модуля
+          «{{ module.unlock_from }}». Сейчас пройдено {{ module.unlock_done }}.
+        </div>
+      {% endif %}
+    </article>
+  {% endfor %}
+</div>
+
+<div class="notice notice-info">
+  <strong>Как заниматься:</strong> начните с ежедневного занятия на главной.
+  Оно само подберёт задания из доступных тем. Для дополнительной тренировки
+  используйте кнопку «Тренировка» у нужного модуля, а ошибки возвращайте
+  через «Повторение».
+</div>
+
+{% endblock %}
